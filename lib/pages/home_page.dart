@@ -1,3 +1,4 @@
+import 'package:auto_animated/auto_animated.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:crypto_app/models/crypto.dart';
 import 'package:crypto_app/pages/crypto_page.dart';
@@ -16,12 +17,19 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final double height = 80;
+  final ScrollController scrollCtrl = ScrollController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Constants.navyBlue,
       body: _body(),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    scrollCtrl.dispose();
   }
 
   Widget _body() {
@@ -65,10 +73,17 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ),
-        SliverList(
-          delegate: SliverChildBuilderDelegate(
-            childCount: widget.cryptoList.length,
-            (context, index) => _sliverListChild(widget.cryptoList[index]),
+        LiveSliverList.options(
+          itemBuilder: (context, index, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: _sliverListChild(widget.cryptoList[index]),
+            );
+          },
+          itemCount: widget.cryptoList.length,
+          controller: scrollCtrl,
+          options: LiveOptions(
+            showItemInterval: Duration(milliseconds: 100),
           ),
         ),
       ],
@@ -241,13 +256,40 @@ class _HomePageState extends State<HomePage> {
   }
 
   void goToSearchPage() {
-    Navigator.push(context, SearchPage(widget.cryptoList));
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            SearchPage(widget.cryptoList),
+        transitionDuration: Duration(seconds: 1),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: Tween<Offset>(begin: Offset(0.0, -0.1), end: Offset.zero)
+                .animate(animation),
+            child: FadeTransition(
+              opacity: animation,
+              child: child,
+            ),
+          );
+        },
+      ),
+    );
   }
 
   void goToCryptoPage(Crypto crypto) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => CryptoPage(crypto)),
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            CryptoPage(crypto),
+        transitionDuration: Duration(milliseconds: 600),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+      ),
     );
   }
 

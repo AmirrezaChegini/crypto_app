@@ -69,7 +69,18 @@ class _SplashPageState extends State<SplashPage> {
         () {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => HomePage(cryptoList)),
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) =>
+                  HomePage(cryptoList),
+              transitionDuration: Duration(seconds: 1),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: child,
+                );
+              },
+            ),
           );
         },
       );

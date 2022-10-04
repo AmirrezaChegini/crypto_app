@@ -19,11 +19,7 @@ class _CryptoPageState extends State<CryptoPage> {
     'Week',
     'Month',
   ];
-  List<bool> chipsSelected = [
-    true,
-    false,
-    false,
-  ];
+  int chipsSelected = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -147,16 +143,12 @@ class _CryptoPageState extends State<CryptoPage> {
                 ChipseTitle.length,
                 (index) => ChoiceChip(
                   label: Text(ChipseTitle[index]),
-                  selected: chipsSelected[index],
+                  selected: chipsSelected == index ? true : false,
                   onSelected: (value) {
                     //for show which chipse is selected
                     setState(() {
-                      //first select false all chipse
-                      for (var i = 0; i < ChipseTitle.length; i++) {
-                        chipsSelected[i] = false;
-                      }
-                      //then the chipse choosen by the user are selected
-                      chipsSelected[index] = true;
+                      //chipse choosen by the user
+                      chipsSelected = index;
                     });
                   },
                   backgroundColor: Constants.white2,
@@ -174,9 +166,9 @@ class _CryptoPageState extends State<CryptoPage> {
 
   //this method call crypto chart api base on crypto and chipse selected
   String chartCryptoApi() {
-    if (chipsSelected[0] == true) {
+    if (chipsSelected == 0) {
       return 'https://s3.coinmarketcap.com/generated/sparklines/web/1d/2781/${widget.crypto.id}.svg';
-    } else if (chipsSelected[1] == true) {
+    } else if (chipsSelected == 1) {
       return 'https://s3.coinmarketcap.com/generated/sparklines/web/7d/2781/${widget.crypto.id}.svg';
     } else {
       return 'https://s3.coinmarketcap.com/generated/sparklines/web/30d/2781/${widget.crypto.id}.svg';

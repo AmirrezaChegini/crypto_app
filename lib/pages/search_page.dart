@@ -4,71 +4,40 @@ import 'package:crypto_app/pages/crypto_page.dart';
 import 'package:crypto_app/utils/constants.dart';
 import 'package:flutter/material.dart';
 
-class SearchPage extends ModalRoute {
-  List<Crypto> cryptoList;
-  List<Crypto> filterCryptoList = [];
-  TextEditingController edtCtrl = TextEditingController();
+class SearchPage extends StatefulWidget {
+  final List<Crypto> cryptoList;
   SearchPage(this.cryptoList);
 
   @override
-  Color? get barrierColor => Constants.black.withOpacity(0.6);
+  State<SearchPage> createState() => _SearchPageState();
+}
 
-  @override
-  bool get barrierDismissible => false;
-
-  @override
-  String? get barrierLabel => null;
-
-  @override
-  bool get maintainState => true;
-
-  @override
-  bool get opaque => false;
-
-  @override
-  Duration get transitionDuration => Duration(milliseconds: 500);
-
-  @override
-  Widget buildTransitions(BuildContext context, Animation<double> animation,
-      Animation<double> secondaryAnimation, Widget child) {
-        //create animation for whole search page
-    // add fade animation
-    return FadeTransition(
-      opacity: animation,
-      // add slide animation
-      child: SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0, -1),
-          end: Offset.zero,
-        ).animate(animation),
-        child: child,
-      ),
-    );
-  }
+class _SearchPageState extends State<SearchPage> {
+  List<Crypto> filterCryptoList = [];
+  TextEditingController edtCtrl = TextEditingController();
 
   @override
   void dispose() {
-    edtCtrl.dispose();
     super.dispose();
+    edtCtrl.dispose();
   }
 
   @override
-  Widget buildPage(BuildContext context, Animation<double> animation,
-      Animation<double> secondaryAnimation) {
+  Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Constants.navyBlue,
       resizeToAvoidBottomInset: false,
-      body: _body(context),
+      backgroundColor: Constants.navyBlue,
+      body: _body(),
     );
   }
 
-  Widget _body(BuildContext context) {
+  Widget _body() {
     return SafeArea(
       child: Column(
         children: [
           Expanded(
             flex: 13,
-            child: _textField(context),
+            child: _textField(),
           ),
           Expanded(
             flex: 87,
@@ -90,15 +59,16 @@ class SearchPage extends ModalRoute {
         SliverList(
           delegate: SliverChildBuilderDelegate(
             childCount: filterCryptoList.length,
-            (context, index) =>
-                _sliverListChild(filterCryptoList[index], context),
+            (context, index) => _sliverListChild(filterCryptoList[index]),
           ),
         ),
       ],
     );
   }
 
-  Widget _sliverListChild(Crypto crypto, BuildContext context) {
+  Widget _sliverListChild(
+    Crypto crypto,
+  ) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       child: Material(
@@ -107,7 +77,7 @@ class SearchPage extends ModalRoute {
         elevation: 4,
         child: InkWell(
           //go to crypto page
-          onTap: () => goToCryptoPage(crypto, context),
+          onTap: () => goToCryptoPage(crypto),
           splashColor: Constants.grey,
           borderRadius: BorderRadius.circular(15),
           child: Container(
@@ -188,7 +158,7 @@ class SearchPage extends ModalRoute {
     );
   }
 
-  Widget _textField(BuildContext context) {
+  Widget _textField() {
     return Container(
       child: Row(
         children: [
@@ -213,11 +183,11 @@ class SearchPage extends ModalRoute {
                 ),
                 suffixIcon: IconButton(
                   onPressed: () {
-                    //when user tab the close btn text filed will empty and show nothing in search list
-                    edtCtrl.clear();
-                    filterCryptoList = [];
-                    //set state for modal route
-                    changedExternalState();
+                    setState(() {
+                      //when user tab the close btn text filed will empty and show nothing in search list
+                      edtCtrl.clear();
+                      filterCryptoList = [];
+                    });
                   },
                   icon: Icon(
                     Icons.close,
@@ -247,25 +217,35 @@ class SearchPage extends ModalRoute {
     );
   }
 
-  void goToCryptoPage(Crypto crypto, BuildContext context) {
+  void goToCryptoPage(Crypto crypto) {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => CryptoPage(crypto)),
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            CryptoPage(crypto),
+        transitionDuration: Duration(milliseconds: 600),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+      ),
     );
   }
 
   void searchList(String value) {
-    if (value.isEmpty) {
-      //when text filed is empty show nothing.
-      filterCryptoList = [];
-    } else {
-      //when user writing in text field show crypto based on user's input
-      filterCryptoList = cryptoList
-          .where((crypto) =>
-              crypto.name.toLowerCase().contains(value.toLowerCase()))
-          .toList();
-    }
-    //set state in modal route
-    changedExternalState();
+    setState(() {
+      if (value.isEmpty) {
+        //when text filed is empty show nothing.
+        filterCryptoList = [];
+      } else {
+        //when user writing in text field show crypto based on user's input
+        filterCryptoList = widget.cryptoList
+            .where((crypto) =>
+                crypto.name.toLowerCase().contains(value.toLowerCase()))
+            .toList();
+      }
+    });
   }
 }
